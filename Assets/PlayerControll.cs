@@ -2,19 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Raquete : MonoBehaviour
+public class PlayerControll : MonoBehaviour
 {
     public float moveSpeed = 5f; // Velocidade de movimentação
     private Rigidbody2D rb2d; // Referência para o Rigidbody2D
+    private SpriteRenderer sprite;
     private Vector2 moveDirection; // Direção do movimento
+    private GameObject tiro;
+    public int vidas = 3;
+    private int inv = 0;
 
-    public GameObject projétilPrefab; // O prefab do projétil
-    public Transform pontoDeTiro;  // O ponto onde o projétil será disparado (geralmente à frente da nave)
 
     // Start is called before the first frame update
     void Start()
     {
         rb2d = GetComponent<Rigidbody2D>();
+        tiro = GameObject.Find("T1");
+        sprite = GetComponent<SpriteRenderer>();
     }
 
     void Update()
@@ -23,11 +27,24 @@ public class Raquete : MonoBehaviour
         float moveX = Input.GetAxisRaw("Horizontal"); // Movimento na horizontal (A/D ou setas)
         moveDirection = new Vector2(moveX, 0);
 
-        // Disparo do projétil
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && tiro.transform.position.y >= 5)
         {
-            Atirar();
+            tiro.transform.position = rb2d.transform.position;
         }
+
+        if(inv > 0)
+        {
+            inv-=1;
+            if(inv%5 == 0)
+            {
+                sprite.enabled = !sprite.enabled;
+            }
+        }
+        else
+        {
+            sprite.enabled = true;
+        }
+
     }
 
     // FixedUpdate é chamado de forma mais consistente para física
@@ -42,10 +59,12 @@ public class Raquete : MonoBehaviour
         rb2d.MovePosition(newPos);
     }
 
-    // Função para instanciar o projétil
-    void Atirar()
+    private void OnTriggerEnter2D(Collider2D coll)
     {
-        // Instancia o projétil na posição do ponto de tiro
-        Instantiate(projétilPrefab, pontoDeTiro.position, Quaternion.identity);
+        if(coll.name != "T1" && inv == 0 && vidas>0)
+        {
+            vidas -= 1;
+            inv = 1000;
+        }
     }
 }
